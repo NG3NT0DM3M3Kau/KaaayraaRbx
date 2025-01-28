@@ -1,0 +1,241 @@
+repeat wait() until game:IsLoaded() -- Tunggu game selesai dimuat
+
+local player = game.Players.LocalPlayer
+local fishingTool = nil
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/UI-Library/main/UI-Library.lua"))() -- Load UI Library
+
+-- Buat UI Menu
+local window = library:CreateWindow("Fisch Cheat Menu (Mobile)")
+
+-- Tab Kategori
+local discordTab = window:CreateTab("Discord")
+local playerTab = window:CreateTab("Player")
+local autoTab = window:CreateTab("Auto")
+local marketTab = window:CreateTab("Market")
+local areaTab = window:CreateTab("Area")
+local miscTab = window:CreateTab("MISC")
+local dupeTab = window:CreateTab("Dupe")
+local settingsTab = window:CreateTab("Settings")
+
+-- Auto Features
+local autoFishToggle = false
+local autoSellToggle = false
+local antiAfkToggle = false
+
+-- Cek alat pancing
+for _, tool in pairs(player.Backpack:GetChildren()) do
+    if tool:IsA("Tool") and tool.Name:lower():find("fish") then
+        fishingTool = tool
+        break
+    end
+end
+
+if not fishingTool then
+    warn("⚠️ Tidak menemukan alat pancing!")
+end
+
+-- Pindahkan alat pancing ke tangan pemain
+fishingTool.Parent = player.Character
+
+-- Fungsi Auto Fish
+function autoFish()
+    while autoFishToggle do
+        wait(2)
+        local args = { [1] = "CastLine" }
+        game:GetService("ReplicatedStorage").FishingEvent:FireServer(unpack(args))
+    end
+end
+
+-- Fungsi Auto Sell Fish
+function autoSell()
+    while autoSellToggle do
+        wait(3)
+        local args = { [1] = "SellAll" }
+        game:GetService("ReplicatedStorage").SellEvent:FireServer(unpack(args))
+    end
+end
+
+-- Fungsi Anti AFK
+local vu = game:GetService("VirtualUser")
+function antiAfk()
+    while antiAfkToggle do
+        wait(60)
+        vu:CaptureController()
+        vu:ClickButton2(Vector2.new())
+    end
+end
+
+-- DISCORD TAB
+discordTab:CreateButton("Join Discord", function()
+    setclipboard("https://discord.gg/YOUR_SERVER_LINK") -- Ganti dengan link Discord Anda
+    print("✅ Discord link copied!")
+end)
+
+-- PLAYER TAB
+playerTab:CreateSlider("Walk Speed", 16, 200, function(value)
+    player.Character.Humanoid.WalkSpeed = value
+end)
+
+playerTab:CreateSlider("Jump Power", 50, 300, function(value)
+    player.Character.Humanoid.JumpPower = value
+end)
+
+-- AUTO TAB
+autoTab:CreateToggle("🎣 Auto Fish", function(state)
+    autoFishToggle = state
+    if state then autoFish() end
+end)
+
+autoTab:CreateToggle("💰 Auto Sell Fish", function(state)
+    autoSellToggle = state
+    if state then autoSell() end
+end)
+
+-- MARKET TAB
+marketTab:CreateButton("Sell All Fish", function()
+    local args = { [1] = "SellAll" }
+    game:GetService("ReplicatedStorage").SellEvent:FireServer(unpack(args))
+end)
+
+marketTab:CreateButton("📦 Buy Item", function()
+    local args = { [1] = "BuyItem" }
+    game:GetService("ReplicatedStorage").MarketEvent:FireServer(unpack(args))
+end)
+
+marketTab:CreateButton("🔍 Appraise Item", function()
+    local args = { [1] = "AppraiseItem" }
+    game:GetService("ReplicatedStorage").MarketEvent:FireServer(unpack(args))
+end)
+
+marketTab:CreateButton("✨ Enchant Item", function()
+    local args = { [1] = "EnchantItem" }
+    game:GetService("ReplicatedStorage").MarketEvent:FireServer(unpack(args))
+end)
+
+-- Menambahkan pilihan Rod
+marketTab:CreateButton("🎣 Buy Rod", function()
+    local args = { [1] = "BuyRod" }
+    game:GetService("ReplicatedStorage").MarketEvent:FireServer(unpack(args))
+end)
+
+-- Menambahkan pilihan Items: Item dan Fish
+marketTab:CreateDropdown("Items", {"Item", "Fish"}, function(selectedItem)
+    if selectedItem == "Item" then
+        -- Handle pembelian item umum
+        local args = { [1] = "BuyItem" }
+        game:GetService("ReplicatedStorage").MarketEvent:FireServer(unpack(args))
+    elseif selectedItem == "Fish" then
+        -- Handle pembelian ikan
+        local args = { [1] = "BuyFish" }
+        game:GetService("ReplicatedStorage").MarketEvent:FireServer(unpack(args))
+    end
+end)
+
+-- **Menambahkan pilihan Bait dan Quality Bait untuk Fish**
+marketTab:CreateDropdown("Bait Create", {"Basic Bait", "Premium Bait"}, function(selectedBait)
+    if selectedBait == "Basic Bait" then
+        -- Tentukan harga untuk bait biasa
+        local price = 100
+        marketTab:CreateLabel("Price: " .. price .. " Coins")
+        -- Tambahkan input jumlah untuk pembelian
+        marketTab:CreateSlider("Amount", 1, 10, function(amount)
+            marketTab:CreateButton("Buy Bait", function()
+                if player.leaderstats.Coins.Value >= price * amount then
+                    player.leaderstats.Coins.Value = player.leaderstats.Coins.Value - price * amount
+                    print("✅ Bought " .. amount .. " Basic Bait!")
+                else
+                    print("❌ Not enough coins!")
+                end
+            end)
+        end)
+    elseif selectedBait == "Premium Bait" then
+        -- Tentukan harga untuk bait premium
+        local price = 250
+        marketTab:CreateLabel("Price: " .. price .. " Coins")
+        -- Tambahkan input jumlah untuk pembelian
+        marketTab:CreateSlider("Amount", 1, 10, function(amount)
+            marketTab:CreateButton("Buy Premium Bait", function()
+                if player.leaderstats.Coins.Value >= price * amount then
+                    player.leaderstats.Coins.Value = player.leaderstats.Coins.Value - price * amount
+                    print("✅ Bought " .. amount .. " Premium Bait!")
+                else
+                    print("❌ Not enough coins!")
+                end
+            end)
+        end)
+    end
+end)
+
+marketTab:CreateDropdown("Quality Bait Create", {"Quality Bait I", "Quality Bait II"}, function(selectedBait)
+    if selectedBait == "Quality Bait I" then
+        -- Tentukan harga untuk bait kualitas I
+        local price = 200
+        marketTab:CreateLabel("Price: " .. price .. " Coins")
+        -- Tambahkan input jumlah untuk pembelian
+        marketTab:CreateSlider("Amount", 1, 10, function(amount)
+            marketTab:CreateButton("Buy Quality Bait I", function()
+                if player.leaderstats.Coins.Value >= price * amount then
+                    player.leaderstats.Coins.Value = player.leaderstats.Coins.Value - price * amount
+                    print("✅ Bought " .. amount .. " Quality Bait I!")
+                else
+                    print("❌ Not enough coins!")
+                end
+            end)
+        end)
+    elseif selectedBait == "Quality Bait II" then
+        -- Tentukan harga untuk bait kualitas II
+        local price = 400
+        marketTab:CreateLabel("Price: " .. price .. " Coins")
+        -- Tambahkan input jumlah untuk pembelian
+        marketTab:CreateSlider("Amount", 1, 10, function(amount)
+            marketTab:CreateButton("Buy Quality Bait II", function()
+                if player.leaderstats.Coins.Value >= price * amount then
+                    player.leaderstats.Coins.Value = player.leaderstats.Coins.Value - price * amount
+                    print("✅ Bought " .. amount .. " Quality Bait II!")
+                else
+                    print("❌ Not enough coins!")
+                end
+            end)
+        end)
+    end
+end)
+
+-- AREA TAB
+areaTab:CreateButton("Teleport ke Spot Memancing", function()
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0) -- Ganti dengan koordinat lokasi pancing terbaik
+end)
+
+-- MISC TAB
+miscTab:CreateToggle("🛡️ God Mode", function(state)
+    player.Character.Humanoid.MaxHealth = math.huge
+    player.Character.Humanoid.Health = math.huge
+end)
+
+miscTab:CreateToggle("🚀 NoClip", function(state)
+    while state do
+        wait()
+        for _, part in pairs(player.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+miscTab:CreateToggle("🕹️ Anti AFK", function(state)
+    antiAfkToggle = state
+    if state then antiAfk() end
+end)
+
+-- DUPE TAB
+dupeTab:CreateButton("📦 Dupe Items (Experimental)", function()
+    local args = { [1] = "DuplicateItem" }
+    game:GetService("ReplicatedStorage").DupeEvent:FireServer(unpack(args))
+end)
+
+-- SETTINGS TAB
+settingsTab:CreateButton("❌ Unload Script", function()
+    library:Destroy()
+end)
+
+print("✅ Menu Cheat Fisch Aktif! Tekan F9 untuk melihat log.")
